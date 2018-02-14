@@ -21,6 +21,7 @@ class PageUtility
 
         $userPageMap = [];
         $userPageArray = [];
+        $notFoundPageArray = [];
 
         for ($i = 0; $i < count($pages); $i++) {
             $isFound = false;
@@ -28,8 +29,10 @@ class PageUtility
                 if ($pages[$i]->id == $activities[$j]->page_id) {
                     for ($k = 0; $k < count($users); $k++) {
                         if ($users[$k]->id == $activities[$j]->user_id) {
-                            if(array_key_exists($users[$k]->id, $userPageMap)){
-                                $userPageMap[$users[$k]->id]['view_count'] = $userPageMap[$users[$k]->id]['view_count'] + 1;
+                            if(array_key_exists($users[$k]->id, $userPageMap)
+                                && array_key_exists($pages[$i]->id, $userPageMap[$users[$k]->id])){
+                                $userPageMap[$users[$k]->id][$pages[$i]->id]['view_count'] =
+                                    $userPageMap[$users[$k]->id][$pages[$i]->id]['view_count'] + 1;
                             }else{
                                 $isFound = true;
                                 $userPage = [];
@@ -38,7 +41,7 @@ class PageUtility
                                 $userPage['user_id'] = $users[$k]->id;
                                 $userPage['user_name'] = $users[$k]->name;
                                 $userPage['view_count'] = 1;
-                                $userPageMap[$users[$k]->id] = $userPage;
+                                $userPageMap[$users[$k]->id][$pages[$i]->id] = $userPage;
                             }
                         }
 
@@ -49,15 +52,21 @@ class PageUtility
                 $userPage = [];
                 $userPage['page_id'] = $pages[$i]->id;
                 $userPage['page_title'] = $pages[$i]->title;
-                $userPageArray[] = $userPage;
+                $notFoundPageArray[] = $userPage;
             }
         }
 
         // ユーザIDでソート
         ksort($userPageMap);
 
-        foreach ($userPageMap as $userPage) {
-            $userPageArray[] = $userPage;
+        foreach ($userPageMap as $pageMap) {
+            foreach ($pageMap as $page) {
+                $userPageArray[] = $page;
+            }
+        }
+
+        foreach ($notFoundPageArray as $notFoundPage) {
+            $userPageArray[] = $notFoundPage;
         }
 
         return $userPageArray;
